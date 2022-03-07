@@ -1,5 +1,9 @@
 package org.darwin;
 
+/**
+ * Node class. Used to represent the path during the BFS search. It holds a rectangle
+ * associated with this node and a parent, so we can traverse the path from end to beginning.
+ */
 public class Node {
     private Node parent;
     private Rect rect;

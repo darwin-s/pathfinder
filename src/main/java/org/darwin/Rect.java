@@ -3,7 +3,14 @@ package org.darwin;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
+/**
+ * Class representing the rectangles, from which the "board" is made.
+ * A rectangle is the smallest unit in this application. The color of the
+ * rectangle is determined by it's type (Blank - white, Wall - black, Start - green,
+ * End - red and Path - blue).
+ */
 public class Rect {
+    // Size of a rectangle in pixels
     public static final int SIZE = 32;
 
     public enum Type {
@@ -63,6 +70,10 @@ public class Rect {
         return type;
     }
 
+    /**
+     * Set type and update color
+     * @param type New type of the rectangle
+     */
     public void setType(Type type) {
         this.type = type;
         updateColor();
@@ -72,6 +83,10 @@ public class Rect {
         return shape;
     }
 
+    /**
+     * Initialize the underlying shape of the rectangle.
+     * Set the position and size of the shape.
+     */
     private void initShape() {
         shape = new Rectangle();
 
@@ -83,6 +98,9 @@ public class Rect {
         updateColor();
     }
 
+    /**
+     * Update fill color based on the rectangle type.
+     */
     private void updateColor() {
         switch (type) {
             case BLANK:
