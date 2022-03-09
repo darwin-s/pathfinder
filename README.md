@@ -28,4 +28,16 @@ java -jar Pathfinder.jar
 ## Controls
 You can use the left mouse button to add "walls" to the scene.
 The path cannot go over those walls. To remove them you can use
-the right mouse button.
+the right mouse button. 
+
+# Colors
+The demo app uses rectangles with different colors to show different
+tile types. Here is a quick explanation:
+ - White - Blank space
+ - Black - Wall
+ - Green - Starting position
+ - Red - End position
+ - Blue - Path from starting to end position
+
+# Example Screenshot
+![Example](https://i.imgur.com/Gq3G9JJ.png)
