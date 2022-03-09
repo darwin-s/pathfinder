@@ -1,25 +1,24 @@
 package org.darwin;
 
-import javafx.application.Application;
-import javafx.event.EventHandler;
-import javafx.scene.Group;
-import javafx.scene.Scene;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.paint.Color;
-import javafx.stage.Stage;
-
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 import java.util.LinkedList;
 
-public class App extends Application {
+public class App {
     private static final int SIZE = 20;
-    private Rect[][] rects;
-    private Rect start;
-    private Rect end;
+    private static final int WINDOW_SIZE = 640;
+    private static Rect[][] rects;
+    private static Rect start;
+    private static Rect end;
+    private static boolean erasing = false;
 
     /**
      * Find path from start to end point, using BFS.
      */
-    private void findPath() {
+    private static void findPath() {
         // Keep track of visited nodes
         boolean[][] visited = new boolean[SIZE][SIZE];
 
@@ -105,9 +104,8 @@ public class App extends Application {
      * The method also sets the rectangle's special type for the starting and end point.
      * @param x Rectangle X position
      * @param y Rectangle Y position
-     * @param root Drawing group
      */
-    private void initRect(int x, int y, Group root) {
+    private static void initRect(int x, int y) {
         // Process out of bounds
         if (x < 0 || x >= SIZE || y < 0 || y >= SIZE) {
             return;
@@ -123,20 +121,20 @@ public class App extends Application {
             rects[y][x].setType(Rect.Type.END);
             end = rects[y][x];
         }
-
-        root.getChildren().add(rects[y][x].getShape());
     }
 
-    @Override
-    public void start(Stage stage) {
+    public static void main(String[] args) {
         rects = new Rect[SIZE][SIZE];
 
-        Group root = new Group();
-        Scene scene = new Scene(root, 640.0, 640.0, Color.WHITE);
+        JFrame window = new JFrame("Pathfinder");
+        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        window.getContentPane().add(new RectCanvas(rects));
+        window.getContentPane().setPreferredSize(new Dimension(WINDOW_SIZE, WINDOW_SIZE));
+        window.pack();
 
         for (int y = 0; y < SIZE; y++) {
             for (int x = 0; x < SIZE; x++) {
-                initRect(x, y, root);
+                initRect(x, y);
             }
         }
 
@@ -144,38 +142,99 @@ public class App extends Application {
         findPath();
 
         // Set up event handling
-        EventHandler<MouseEvent> eventHandler = mouseEvent -> {
-            int x1 = (int) (mouseEvent.getX() / Rect.SIZE);
-            int y1 = (int) (mouseEvent.getY() / Rect.SIZE);
+        window.addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                super.mouseDragged(e);
 
-            if (x1 < 0 || x1 >= SIZE || y1 < 0 || y1 >= SIZE) {
-                return;
+                handleMouseEvent(e, window, rects, true);
             }
+        });
 
-            if (mouseEvent.isPrimaryButtonDown()) {
-                if (rects[y1][x1].getType() == Rect.Type.BLANK
-                        || rects[y1][x1].getType() == Rect.Type.PATH) {
-                    rects[y1][x1].setType(Rect.Type.WALL);
-                    findPath();
-                }
-            } else if (mouseEvent.isSecondaryButtonDown()) {
-                if (rects[y1][x1].getType() == Rect.Type.WALL) {
-                    rects[y1][x1].setType(Rect.Type.BLANK);
-                    findPath();
-                }
+        window.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                super.mousePressed(e);
+
+                handleMouseEvent(e, window, rects, false);
             }
-        };
+        });
 
-        scene.addEventFilter(MouseEvent.MOUSE_DRAGGED, eventHandler);
-        scene.addEventFilter(MouseEvent.MOUSE_PRESSED, eventHandler);
-
-        stage.setTitle("Pathfinder");
-        stage.setScene(scene);
-        stage.show();
+        window.setResizable(false);
+        window.setVisible(true);
     }
 
-    public static void main(String[] args) {
-        launch();
+    /**
+     * Handle mouse events
+     * @param e Mouse event
+     * @param window Current window
+     * @param rects Rectangles that can be affected
+     * @param drag Specifies if current event is a mouse drag
+     */
+    private static void handleMouseEvent(MouseEvent e, JFrame window, Rect[][] rects, boolean drag) {
+        final int x1 = e.getX() / Rect.SIZE;
+        final int y1 = e.getY() / Rect.SIZE - 1;
+
+        if (x1 < 0 || x1 >= SIZE || y1 < 0 || y1 >= SIZE) {
+            return;
+        }
+
+        if (drag) {
+            handleDrag(window, rects, x1, y1);
+        } else {
+            handleClick(e, window, rects, x1, y1);
+        }
+    }
+
+    /**
+     * Handle mouse clicks
+     * @param e Mouse event
+     * @param window Current window
+     * @param rects Rectangles that can be affected
+     * @param x1 Click X position
+     * @param y1 Click Y position
+     */
+    private static void handleClick(MouseEvent e, JFrame window, Rect[][] rects, int x1, int y1) {
+        if (e.getButton() == MouseEvent.BUTTON1) {
+            if (rects[y1][x1].getType() == Rect.Type.BLANK
+                    || rects[y1][x1].getType() == Rect.Type.PATH) {
+                rects[y1][x1].setType(Rect.Type.WALL);
+                findPath();
+                window.getContentPane().repaint();
+            }
+            erasing = false;
+        } else if (e.getButton() == MouseEvent.BUTTON3) {
+            if (rects[y1][x1].getType() == Rect.Type.WALL) {
+                rects[y1][x1].setType(Rect.Type.BLANK);
+                findPath();
+                window.getContentPane().repaint();
+            }
+            erasing = true;
+        }
+    }
+
+    /**
+     * Handle mouse dragging
+     * @param window Current window
+     * @param rects Rectangles that can be affected
+     * @param x1 Drag X position
+     * @param y1 Drag Y position
+     */
+    private static void handleDrag(JFrame window, Rect[][] rects, int x1, int y1) {
+        if (!erasing) {
+            if (rects[y1][x1].getType() == Rect.Type.BLANK
+                    || rects[y1][x1].getType() == Rect.Type.PATH) {
+                rects[y1][x1].setType(Rect.Type.WALL);
+                findPath();
+                window.getContentPane().repaint();
+            }
+        } else {
+            if (rects[y1][x1].getType() == Rect.Type.WALL) {
+                rects[y1][x1].setType(Rect.Type.BLANK);
+                findPath();
+                window.getContentPane().repaint();
+            }
+        }
     }
 
 }

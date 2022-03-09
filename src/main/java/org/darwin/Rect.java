@@ -1,7 +1,6 @@
 package org.darwin;
 
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
+import java.awt.*;
 
 /**
  * Class representing the rectangles, from which the "board" is made.
@@ -25,6 +24,7 @@ public class Rect {
     private int y;
     private Type type;
     private Rectangle shape;
+    private Color fillColor;
 
     public Rect() {
         this.x = 0;
@@ -84,16 +84,27 @@ public class Rect {
     }
 
     /**
+     * Draw the rectangle
+     * @param g Graphics context
+     */
+    public void draw(Graphics g) {
+        Graphics2D g2d = (Graphics2D) g;
+
+        g2d.setColor(fillColor);
+        g2d.fill(shape);
+    }
+
+    /**
      * Initialize the underlying shape of the rectangle.
      * Set the position and size of the shape.
      */
     private void initShape() {
         shape = new Rectangle();
 
-        shape.setX(SIZE * x);
-        shape.setY(SIZE * y);
-        shape.setWidth(SIZE);
-        shape.setHeight(SIZE);
+        shape.x = SIZE * x;
+        shape.y = SIZE * y;
+        shape.width = SIZE;
+        shape.height = SIZE;
 
         updateColor();
     }
@@ -104,19 +115,19 @@ public class Rect {
     private void updateColor() {
         switch (type) {
             case BLANK:
-                shape.setFill(Color.WHITE);
+                fillColor = Color.WHITE;
                 break;
             case WALL:
-                shape.setFill(Color.BLACK);
+                fillColor = Color.BLACK;
                 break;
             case START:
-                shape.setFill(Color.GREEN);
+                fillColor = Color.GREEN;
                 break;
             case END:
-                shape.setFill(Color.RED);
+                fillColor = Color.RED;
                 break;
             case PATH:
-                shape.setFill(Color.BLUE);
+                fillColor = Color.BLUE;
                 break;
         }
     }
